@@ -12,7 +12,11 @@ from .store import Store, ValidationError
 
 
 def _modal(win: ctk.CTkToplevel, parent) -> None:
-    win.transient(parent)
+    try:
+        if parent.winfo_viewable():       # a transient child of a hidden window would be hidden too
+            win.transient(parent)
+    except Exception:
+        pass
     win.after(150, lambda: (win.winfo_exists() and (win.grab_set(), win.focus_force())))
 
 
@@ -182,42 +186,64 @@ class ConflictDialog(ctk.CTkToplevel):
 
 
 class SetupDialog(ctk.CTkToplevel):
-    """First-run (or broken-path) chooser. ``.result`` is ('open'|'new', path) or None."""
+    """First-run (or broken-path) chooser. ``.result`` is ('folder'|'open', path) or None."""
 
     def __init__(self, parent, message: str = ""):
         super().__init__(parent)
+        from . import config
         self.result: tuple[str, str] | None = None
-        self.title("LeanIX Lite - choose your database")
-        self.geometry("560x330")
+        self.title("LeanIX Lite - connect your OneDrive folder")
+        self.geometry("600x420")
         self.resizable(False, False)
-        ctk.CTkLabel(self, text="Choose the shared Excel database",
+        ctk.CTkLabel(self, text="Connect the shared OneDrive folder",
                      font=ctk.CTkFont(size=18, weight="bold")).pack(anchor="w", padx=20, pady=(20, 4))
-        ctk.CTkLabel(self, wraplength=520, justify="left", text_color="gray",
+        ctk.CTkLabel(self, wraplength=560, justify="left", text_color="gray",
                      text=(message + "\n\n" if message else "") +
-                          "Pick a workbook inside your synced OneDrive folder so you and your manager "
-                          "use the same data. The location is remembered on this computer.").pack(
-            anchor="w", padx=20)
-        ctk.CTkButton(self, text="Open existing .xlsx file...", height=38, command=self._open).pack(
-            fill="x", padx=20, pady=(22, 8))
-        ctk.CTkButton(self, text="Create a new, empty database...", height=38, fg_color="#2e8b57",
-                      hover_color="#256f46", command=self._new).pack(fill="x", padx=20)
+                          f"Choose a folder inside your OneDrive. The app creates its own Excel database "
+                          f"('{config.DB_FILENAME}') there, or opens it if it already exists. "
+                          f"Share that folder with your manager so you both use the same data. "
+                          f"The choice is remembered on this computer.").pack(anchor="w", padx=20)
+
+        detected = config.detect_onedrive_folders()
+        self._start = str(detected[0]) if detected else ""
+        if detected:
+            ctk.CTkLabel(self, text="OneDrive found on this PC:  " + "   |   ".join(str(d) for d in detected),
+                         wraplength=560, justify="left", font=ctk.CTkFont(size=11)).pack(
+                anchor="w", padx=20, pady=(10, 0))
+        else:
+            ctk.CTkLabel(self, text="No OneDrive folder was detected automatically - you can still browse "
+                                    "to it (usually C:\\Users\\<you>\\OneDrive...).",
+                         wraplength=560, justify="left", text_color="#e0a030",
+                         font=ctk.CTkFont(size=11)).pack(anchor="w", padx=20, pady=(10, 0))
+
+        ctk.CTkButton(self, text="Select the OneDrive folder...", height=42, command=self._folder).pack(
+            fill="x", padx=20, pady=(18, 8))
+        ctk.CTkButton(self, text="Advanced: open a specific existing .xlsx file...", height=30,
+                      fg_color="transparent", border_width=1, text_color=("gray20", "gray80"),
+                      command=self._open).pack(fill="x", padx=20)
         ctk.CTkButton(self, text="Quit", fg_color="gray40", hover_color="gray30", width=80,
                       command=self.destroy).pack(anchor="e", padx=20, pady=18)
         _modal(self, parent)
+
+    def _folder(self):
+        from tkinter import messagebox
+        p = filedialog.askdirectory(parent=self, title="Select the OneDrive folder for LeanIX Lite",
+                                    initialdir=self._start or None, mustexist=True)
+        if not p:
+            return
+        if "onedrive" not in p.lower() and not messagebox.askyesno(
+                "Not a OneDrive folder?",
+                f"'{p}' does not look like a OneDrive folder, so your manager may not see the data.\n\n"
+                f"Use it anyway?", parent=self):
+            return
+        self.result = ("folder", p)
+        self.destroy()
 
     def _open(self):
         p = filedialog.askopenfilename(parent=self, title="Select the shared Excel file",
                                        filetypes=[("Excel workbook", "*.xlsx")])
         if p:
             self.result = ("open", p)
-            self.destroy()
-
-    def _new(self):
-        p = filedialog.asksaveasfilename(parent=self, title="Create new database",
-                                         defaultextension=".xlsx", initialfile="EA-Repository.xlsx",
-                                         filetypes=[("Excel workbook", "*.xlsx")])
-        if p:
-            self.result = ("new", p)
             self.destroy()
 
     def show(self):

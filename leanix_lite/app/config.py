@@ -32,3 +32,22 @@ def save_config(cfg: dict, path: Path = CONFIG_PATH) -> None:
             json.dump(cfg, f, indent=2)
     except OSError:
         pass   # settings are a convenience; never crash over them
+
+
+DB_FILENAME = "EA-Repository.xlsx"
+
+
+def detect_onedrive_folders() -> list[Path]:
+    """OneDrive folders on this PC (Windows sets these variables when OneDrive is signed in)."""
+    found: list[Path] = []
+    for var in ("OneDriveCommercial", "OneDrive", "OneDriveConsumer"):
+        v = os.environ.get(var)
+        if v and Path(v).is_dir() and Path(v) not in found:
+            found.append(Path(v))
+    try:
+        for p in sorted(Path.home().glob("OneDrive*")):
+            if p.is_dir() and p not in found:
+                found.append(p)
+    except OSError:
+        pass
+    return found

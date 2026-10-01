@@ -1,0 +1,19 @@
+LeanIX Lite - how to get LeanIXLite.exe (one time, about 5 minutes)
+
+You need a Windows PC. An .exe can only be built on Windows.
+
+1. Install Python (free): https://www.python.org/downloads/
+   In the installer, TICK "Add python.exe to PATH", then click Install.
+2. Unzip this folder anywhere (for example your Desktop).
+3. Double-click  build_exe.bat  and wait. It downloads what it needs, runs a self-test and builds the app.
+   When it says DONE, your program is in the new "dist" folder:  dist\LeanIXLite.exe
+4. Copy LeanIXLite.exe to your manager (email, Teams, or the OneDrive folder). They do NOT need Python.
+
+First start of the app:
+1. Create the OneDrive folder (for example "LeanIX Lite") and share it with your manager (edit rights).
+2. Start LeanIXLite.exe, click "Select the OneDrive folder..." and pick that folder.
+   The app creates EA-Repository.xlsx there by itself. Do not create or edit it by hand.
+3. Your manager starts the same .exe and picks the same (synced) folder on their PC.
+
+If Windows SmartScreen says "Windows protected your PC": click "More info" -> "Run anyway".
+(The app is unsigned.) If your company blocks it, ask IT, or run it with run_app.bat instead.

@@ -234,3 +234,15 @@ def test_disk_changed_detection_and_conflicted_copies(xlsx):
     assert s.disk_changed()
     shutil.copy(xlsx, xlsx.parent / "ea-LAPTOP.xlsx")
     assert st.find_conflicted_copies(xlsx) == ["ea-LAPTOP.xlsx"]
+
+
+def test_open_or_create_in_folder(tmp_path, monkeypatch):
+    from app import config, ui_main
+    monkeypatch.setattr(config, "BACKUP_DIR", tmp_path / "bk")
+    folder = tmp_path / "OneDrive" / "LeanIX"
+    folder.mkdir(parents=True)
+    s1 = ui_main.open_or_create("folder", str(folder))          # empty folder -> creates database
+    assert (folder / config.DB_FILENAME).exists()
+    s1.add("application", app_values("Kept")); s1.save()
+    s2 = ui_main.open_or_create("folder", str(folder))          # existing -> opens it, data intact
+    assert [r["Name"] for r in s2.all("application")] == ["Kept"]

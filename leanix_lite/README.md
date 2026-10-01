@@ -30,13 +30,13 @@ pip install -r requirements.txt
 python main.py
 ```
 
-On first launch choose **Open existing .xlsx** or **Create a new, empty database** and put the file
-inside your synced OneDrive folder. The path is remembered per user in
+On first launch click **Select the OneDrive folder...** and pick a folder inside your synced OneDrive.
+The app creates `EA-Repository.xlsx` there itself (or opens it if it exists). The choice is remembered per user in
 `%APPDATA%\LeanIXLite\config.json`. Your manager does the same and picks the *same* file.
 
 ## Build the standalone .exe (for your manager)
 
-On a Windows machine, double-click `build_exe.bat` (or run it in a terminal). It creates a venv,
+See `HOW-TO-GET-THE-EXE.txt` for a plain-language walkthrough. On a Windows machine with Python, double-click `build_exe.bat`. It creates a venv,
 installs dependencies, runs the tests and runs PyInstaller. Result: `dist\LeanIXLite.exe`
 - copy it to your manager; no Python needed. (PyInstaller cannot cross-compile, so it must be built on Windows.)
 If your company's antivirus or policy blocks unsigned executables, run from source instead (`run_app.bat`).

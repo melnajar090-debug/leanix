@@ -51,7 +51,7 @@ class MainWindow(ctk.CTk):
         self.file_lbl = ctk.CTkLabel(bottom, text="", text_color="gray", font=ctk.CTkFont(size=10),
                                      wraplength=200, justify="left")
         self.file_lbl.pack(anchor="w", pady=(0, 6))
-        ctk.CTkButton(bottom, text="Change database file...", fg_color="transparent", border_width=1,
+        ctk.CTkButton(bottom, text="Change OneDrive folder...", fg_color="transparent", border_width=1,
                       text_color=("gray20", "gray80"), command=self.change_file).pack(fill="x", pady=2)
         self.theme = ctk.CTkSwitch(bottom, text="Dark mode", command=self.toggle_theme)
         self.theme.pack(anchor="w", pady=(8, 0), padx=4)
@@ -263,8 +263,12 @@ class MainWindow(ctk.CTk):
 
 
 def open_or_create(mode: str, path: str) -> Store:
-    if mode == "new":
-        return Store.create_new(path, config.BACKUP_DIR)
+    """mode 'folder': use/create the database inside that folder; 'open': a specific .xlsx file."""
+    if mode == "folder":
+        target = Path(path) / config.DB_FILENAME
+        if not target.exists():
+            return Store.create_new(target, config.BACKUP_DIR)
+        path = str(target)
     st = Store(path, config.BACKUP_DIR)
     st.load()
     return st
